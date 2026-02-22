@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AML Compliance Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+[data-theme="dark"] {
+  --bg:#0f1117;--bg2:#161b27;--surface:#1a2133;--card:#1e2840;--card-hover:#243050;
+  --border:#2a3652;--border2:#334166;
+  --text-primary:#f0f4ff;--text-secondary:#a8b8d8;--text-muted:#6a7fa8;--text-faint:#3d5080;
+  --blue:#4f8ef7;--blue-soft:rgba(79,142,247,.15);--cyan:#22d3ee;
+  --green:#34d399;--green-soft:rgba(52,211,153,.15);
+  --red:#fb7185;--red-soft:rgba(251,113,133,.15);
+  --amber:#fbbf24;--amber-soft:rgba(251,191,36,.15);
+  --shadow-lg:0 8px 40px rgba(0,0,0,.7);--shadow:0 4px 20px rgba(0,0,0,.5);
+  --toggle-bg:#2a3652;
+}
+[data-theme="light"] {
+  --bg:#f0f4fc;--bg2:#e6ecf8;--surface:#fff;--card:#fff;--card-hover:#f5f8ff;
+  --border:#dce4f5;--border2:#c8d5ee;
+  --text-primary:#1a2340;--text-secondary:#3d5280;--text-muted:#6a7fa8;--text-faint:#a8b8d8;
+  --blue:#2563eb;--blue-soft:rgba(37,99,235,.1);--cyan:#0891b2;
+  --green:#059669;--green-soft:rgba(5,150,105,.1);
+  --red:#e11d48;--red-soft:rgba(225,29,72,.1);
+  --amber:#d97706;--amber-soft:rgba(217,119,6,.1);
+  --shadow-lg:0 8px 40px rgba(0,0,0,.15);--shadow:0 4px 20px rgba(0,0,0,.1);
+  --toggle-bg:#dce4f5;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:var(--bg);color:var(--text-primary);font-family:'Nunito',sans-serif;font-size:15px;line-height:1.6;transition:background .3s,color .3s;overflow:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+.shell{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:255px;flex-shrink:0;background:var(--surface);border-right:2px solid var(--border);display:flex;flex-direction:column;transition:background .3s,border-color .3s;z-index:20}
+.brand{padding:24px 20px 20px;border-bottom:2px solid var(--border)}
+.brand-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.brand-icon{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px rgba(79,142,247,.4);flex-shrink:0}
+.brand-text-name{font-size:18px;font-weight:900;color:var(--text-primary);letter-spacing:-.3px}
+.brand-text-sub{font-size:11px;color:var(--text-muted);font-family:'Fira Code',monospace;margin-top:1px}
+.brand-badge{display:inline-flex;align-items:center;gap:5px;background:var(--blue-soft);border:1.5px solid var(--blue);color:var(--blue);font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;margin-top:6px}
+.nav{flex:1;padding:14px 12px;overflow-y:auto}
+.nav-group-label{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);padding:10px 10px 6px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;cursor:pointer;font-size:14px;font-weight:700;color:var(--text-muted);transition:all .18s;user-select:none;margin-bottom:3px;border:1.5px solid transparent}
+.nav-item:hover{color:var(--text-primary);background:var(--blue-soft)}
+.nav-item.active{color:var(--blue);background:var(--blue-soft);border-color:rgba(79,142,247,.25)}
+.nav-item .nav-icon{font-size:18px;width:24px;text-align:center}
+.nav-item .nav-label{flex:1}
+.nav-count{background:var(--red-soft);border:1.5px solid var(--red);color:var(--red);font-size:11px;font-weight:800;font-family:'Fira Code',monospace;padding:2px 8px;border-radius:99px;display:none}
+.sidebar-footer{padding:14px 16px;border-top:2px solid var(--border);display:flex;flex-direction:column;gap:10px}
+.theme-toggle-btn{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;background:var(--toggle-bg);border:2px solid var(--border);cursor:pointer;transition:all .2s;width:100%}
+.theme-toggle-btn:hover{border-color:var(--blue)}
+.theme-toggle-track{width:40px;height:22px;border-radius:99px;background:var(--border2);position:relative;transition:background .3s;flex-shrink:0}
+[data-theme="light"] .theme-toggle-track{background:var(--blue)}
+.theme-toggle-thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+[data-theme="light"] .theme-toggle-thumb{transform:translateX(18px)}
+.theme-toggle-label{font-size:13px;font-weight:700;color:var(--text-secondary);flex:1}
+.theme-toggle-mode{font-size:12px;color:var(--text-muted);font-family:'Fira Code',monospace}
+.status-pill{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--green-soft);border:1.5px solid var(--green);border-radius:12px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:glow-pulse 2.2s infinite;flex-shrink:0}
+@keyframes glow-pulse{0%,100%{box-shadow:0 0 6px var(--green)}50%{box-shadow:0 0 14px var(--green)}}
+.status-text{font-size:13px;font-weight:800;color:var(--green)}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:64px;background:var(--surface);border-bottom:2px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:14px;flex-shrink:0}
+.topbar-breadcrumb{font-size:14px;color:var(--text-muted);font-weight:600}
+.topbar-sep{color:var(--text-faint)}
+.topbar-title{font-size:20px;font-weight:900;color:var(--text-primary);letter-spacing:-.3px;flex:1}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.clock-box{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:6px 14px;font-family:'Fira Code',monospace;font-size:13px;color:var(--text-muted)}
+.content{flex:1;overflow-y:auto;padding:28px;background:var(--bg);transition:background .3s}
+.tab-pane{display:none}
+.tab-pane.active{display:block;animation:slideIn .22s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.page-header{margin-bottom:26px}
+.page-header h1{font-size:28px;font-weight:900;color:var(--text-primary);margin-bottom:6px}
+.page-header p{font-size:15px;color:var(--text-secondary);max-width:560px;font-weight:500;line-height:1.6}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:20px 22px;transition:all .2s;cursor:default}
+.stat:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:var(--shadow)}
+.stat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.stat-label{font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px}
+.stat-emoji{font-size:22px}
+.stat-val{font-size:42px;font-weight:900;line-height:1;letter-spacing:-2px}
+.stat-desc{font-size:13px;color:var(--text-muted);font-weight:600;margin-top:4px}
+.stat.total{border-top:4px solid var(--blue)}.stat.total .stat-val{color:var(--blue)}
+.stat.high{border-top:4px solid var(--red)}.stat.high .stat-val{color:var(--red)}
+.stat.med{border-top:4px solid var(--amber)}.stat.med .stat-val{color:var(--amber)}
+.stat.low{border-top:4px solid var(--green)}.stat.low .stat-val{color:var(--green)}
+.card{background:var(--card);border:2px solid var(--border);border-radius:16px;overflow:hidden;transition:background .3s,border-color .3s}
+.card-header{padding:18px 22px;border-bottom:2px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);transition:background .3s}
+.card-title{font-size:15px;font-weight:800;color:var(--text-primary);display:flex;align-items:center;gap:8px}
+.card-body{padding:20px 22px}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.dash-right{display:flex;flex-direction:column;gap:16px}
+.queue-empty{padding:36px;text-align:center;color:var(--text-muted)}
+.queue-empty-icon{font-size:36px;margin-bottom:10px}
+.queue-empty-text{font-size:15px;font-weight:700}
+.queue-empty-sub{font-size:13px;margin-top:3px}
+.queue-item{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:14px;transition:background .15s}
+.queue-item:last-child{border-bottom:none}
+.queue-item:hover{background:var(--card-hover)}
+.queue-item-body{flex:1;min-width:0}
+.queue-item-id{font-family:'Fira Code',monospace;font-size:11px;color:var(--text-muted);margin-bottom:3px}
+.queue-item-desc{font-size:13px;font-weight:600;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.breakdown-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.breakdown-row:last-child{border-bottom:none}
+.breakdown-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.breakdown-lbl{font-size:14px;font-weight:700;color:var(--text-secondary);flex:1}
+.breakdown-bar-track{width:80px;height:6px;background:var(--border);border-radius:99px;overflow:hidden}
+.breakdown-bar-fill{height:100%;border-radius:99px;transition:width .5s ease}
+.breakdown-num{font-size:18px;font-weight:900;min-width:28px;text-align:right}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:99px;font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;font-family:'Fira Code',monospace;border:1.5px solid transparent}
+.badge-HIGH{background:var(--red-soft);color:var(--red);border-color:var(--red)}
+.badge-MEDIUM{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+.badge-LOW{background:var(--green-soft);color:var(--green);border-color:var(--green)}
+.badge-PENDING_REVIEW,.badge-PENDING{background:rgba(106,127,168,.12);color:var(--text-muted);border-color:var(--border2)}
+.badge-CONFIRMED{background:var(--green-soft);color:var(--green);border-color:var(--green)}
+.badge-DISMISSED{background:var(--red-soft);color:var(--red);border-color:var(--red)}
+.table-wrap{background:var(--card);border:2px solid var(--border);border-radius:16px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead th{padding:15px 18px;text-align:left;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);background:var(--bg2);border-bottom:2px solid var(--border)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .12s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--card-hover)}
+td{padding:14px 18px;vertical-align:middle}
+.td-id{font-family:'Fira Code',monospace;font-size:11px;color:var(--text-muted)}
+.td-desc{font-size:13px;font-weight:600;color:var(--text-secondary);max-width:280px;line-height:1.5}
+.td-rem{font-size:12px;color:var(--text-muted);max-width:130px;line-height:1.4}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:10px;border:2px solid transparent;font-size:14px;font-weight:800;cursor:pointer;transition:all .18s;font-family:'Nunito',sans-serif;white-space:nowrap;text-decoration:none}
+.btn:disabled{opacity:.5;cursor:not-allowed;pointer-events:none}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:0 4px 14px rgba(79,142,247,.35)}
+.btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-success{background:var(--green);color:#fff;box-shadow:0 4px 14px rgba(52,211,153,.3)}
+.btn-success:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn-confirm{background:var(--green-soft);color:var(--green);border:2px solid var(--green);padding:7px 14px;font-size:13px}
+.btn-confirm:hover{background:var(--green);color:#fff}
+.btn-dismiss{background:var(--red-soft);color:var(--red);border:2px solid var(--red);padding:7px 14px;font-size:13px}
+.btn-dismiss:hover{background:var(--red);color:#fff}
+.btn-ghost{background:transparent;border:2px solid var(--border2);color:var(--text-secondary)}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
+.btn-sm{padding:7px 14px;font-size:13px}
+.w-full{width:100%}.justify-center{justify-content:center}.mt-16{margin-top:16px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.filter-btn{padding:8px 18px;border-radius:99px;border:2px solid var(--border2);background:transparent;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Nunito',sans-serif}
+.filter-btn:hover{border-color:var(--blue);color:var(--blue)}
+.filter-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.field{margin-bottom:18px}
+.field-label{display:block;font-size:13px;font-weight:800;color:var(--text-secondary);margin-bottom:7px}
+.field-hint{font-size:12px;color:var(--text-muted);margin-top:5px;font-weight:600}
+.input{width:100%;background:var(--bg2);border:2px solid var(--border2);border-radius:10px;padding:12px 16px;color:var(--text-primary);font-size:14px;font-family:'Nunito',sans-serif;font-weight:600;outline:none;transition:border-color .2s,box-shadow .2s,background .3s}
+.input:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(79,142,247,.15)}
+.input::placeholder{color:var(--text-faint);font-weight:600}
+.input-mono{font-family:'Fira Code',monospace;font-size:13px}
+textarea.input{resize:vertical;min-height:80px}
+.scan-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}
+.scan-card{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:26px;transition:background .3s,border-color .3s}
+.scan-card-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:18px;display:flex;align-items:center;gap:7px}
+.drop-zone{border:3px dashed var(--border2);border-radius:14px;padding:42px 20px;text-align:center;cursor:pointer;transition:all .22s;background:var(--bg2)}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--blue);background:var(--blue-soft);transform:scale(1.01)}
+.dz-icon-box{width:60px;height:60px;border-radius:18px;background:var(--blue-soft);border:2px solid var(--blue);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px}
+.dz-title{font-size:15px;font-weight:800;color:var(--text-primary);margin-bottom:4px}
+.dz-sub{font-size:13px;color:var(--text-muted);font-weight:600}
+#pdf-name{margin-top:12px;font-size:13px;color:var(--cyan);font-family:'Fira Code',monospace;font-weight:500;min-height:18px;display:flex;align-items:center;gap:6px}
+.info-steps{background:var(--bg2);border:2px solid var(--border);border-radius:12px;padding:16px;margin-top:16px}
+.info-steps-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--blue);margin-bottom:12px}
+.info-step{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text-secondary)}
+.info-step:last-child{border-bottom:none}
+.info-step-num{width:22px;height:22px;background:var(--blue-soft);border:1.5px solid var(--blue);color:var(--blue);border-radius:50%;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Fira Code',monospace}
+.email-notify-row{display:flex;align-items:center;gap:12px;background:var(--green-soft);border:2px solid var(--green);border-radius:12px;padding:14px 16px;margin-top:16px}
+.email-notify-icon{font-size:22px}
+.email-notify-body{flex:1}
+.email-notify-title{font-size:14px;font-weight:800;color:var(--text-primary)}
+.email-notify-sub{font-size:12px;color:var(--text-muted);font-weight:600}
+.email-notify-badge{font-size:11px;font-weight:800;color:var(--green);background:var(--green-soft);border:1.5px solid var(--green);padding:3px 10px;border-radius:99px;font-family:'Fira Code',monospace}
+.progress-wrap{display:none;background:var(--card);border:2px solid var(--border);border-radius:16px;padding:26px;margin-top:18px}
+.progress-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.progress-heading{font-size:16px;font-weight:800;color:var(--text-primary)}
+.progress-pct{font-family:'Fira Code',monospace;font-size:16px;font-weight:700;color:var(--blue)}
+.progress-track{background:var(--border);border-radius:99px;height:10px;overflow:hidden;margin-bottom:20px}
+.progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--blue),var(--cyan));transition:width .5s cubic-bezier(.4,0,.2,1);width:0%;box-shadow:0 0 12px rgba(79,142,247,.5)}
+.progress-steps{display:flex;flex-direction:column;gap:10px}
+.pstep{display:flex;align-items:center;gap:12px;font-size:14px;font-weight:600;color:var(--text-faint);transition:color .3s}
+.pstep.active{color:var(--blue)}.pstep.done{color:var(--green)}
+.pstep-dot{width:10px;height:10px;border-radius:50%;background:var(--border2);flex-shrink:0;transition:all .3s}
+.pstep.active .pstep-dot{background:var(--blue);box-shadow:0 0 10px var(--blue)}
+.pstep.done .pstep-dot{background:var(--green)}
+.result-panel{display:none;background:var(--card);border:2px solid var(--green);border-radius:16px;padding:26px;margin-top:18px}
+.result-panel.show{display:block;animation:slideIn .3s ease}
+.result-header{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.result-icon-box{width:52px;height:52px;border-radius:16px;background:var(--green-soft);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+.result-title{font-size:20px;font-weight:900;color:var(--green)}
+.result-sub{font-size:13px;font-weight:600;color:var(--text-secondary);margin-top:3px}
+.email-banner{display:flex;align-items:center;gap:14px;background:var(--green-soft);border:2px solid var(--green);border-radius:12px;padding:16px 20px;margin-bottom:20px}
+.email-banner-icon{font-size:28px}
+.email-banner-title{font-size:15px;font-weight:800;color:var(--green)}
+.email-banner-sub{font-size:13px;font-weight:600;color:var(--text-secondary);margin-top:2px}
+.result-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.result-stat-card{background:var(--bg2);border:2px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+.result-stat-val{font-size:28px;font-weight:900;color:var(--blue)}
+.result-stat-val.green{color:var(--green)}.result-stat-val.red{color:var(--red)}
+.result-stat-lbl{font-size:12px;font-weight:700;color:var(--text-muted);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+.rules-preview-box{background:var(--bg2);border:2px solid var(--border);border-radius:12px;padding:16px;font-family:'Fira Code',monospace;font-size:12px;color:var(--text-secondary);line-height:1.8;max-height:150px;overflow-y:auto;white-space:pre-wrap;display:none;margin-bottom:16px}
+.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 185px)}
+.chat-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;background:var(--card);border:2px solid var(--border);border-radius:16px 16px 0 0}
+.msg{max-width:74%;padding:14px 18px;border-radius:14px;font-size:14px;font-weight:600;line-height:1.65}
+.msg.user{align-self:flex-end;background:var(--blue-soft);border:2px solid rgba(79,142,247,.3);color:var(--text-primary);border-bottom-right-radius:4px}
+.msg.ai{align-self:flex-start;background:var(--bg2);border:2px solid var(--border2);color:var(--text-secondary);border-bottom-left-radius:4px}
+.msg-sender{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;font-family:'Fira Code',monospace}
+.msg.user .msg-sender{color:var(--blue)}.msg.ai .msg-sender{color:var(--text-muted)}
+.chat-footer{display:flex;gap:10px;background:var(--surface);border:2px solid var(--border);border-top:none;border-radius:0 0 16px 16px;padding:16px}
+#chat-input{flex:1;background:var(--bg2);border:2px solid var(--border2);border-radius:10px;padding:12px 16px;color:var(--text-primary);font-size:14px;font-family:'Nunito',sans-serif;font-weight:600;outline:none;transition:border-color .2s,box-shadow .2s}
+#chat-input:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(79,142,247,.1)}
+#chat-input::placeholder{color:var(--text-faint)}
+.typing-dots span{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--text-muted);margin:0 2px;animation:bounce 1.2s infinite}
+.typing-dots span:nth-child(2){animation-delay:.2s}.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-8px)}}
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.section-title{font-size:18px;font-weight:900;color:var(--text-primary)}
+.section-meta{font-size:13px;color:var(--text-muted);font-family:'Fira Code',monospace}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.settings-card{background:var(--card);border:2px solid var(--border);border-radius:16px;overflow:hidden}
+.settings-card-head{padding:20px 24px;border-bottom:2px solid var(--border);background:var(--bg2);display:flex;align-items:center;gap:14px}
+.settings-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.settings-card-title{font-size:16px;font-weight:900;color:var(--text-primary)}
+.settings-card-sub{font-size:13px;font-weight:600;color:var(--text-muted);margin-top:2px}
+.settings-card-body{padding:24px}
+.warning-alert{background:var(--amber-soft);border:2px solid var(--amber);border-radius:12px;padding:16px 18px;margin-bottom:22px}
+.warning-alert-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--amber);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.warning-alert p{font-size:13px;font-weight:600;color:var(--text-secondary);line-height:1.7}
+.warning-alert code{background:rgba(0,0,0,.2);padding:2px 6px;border-radius:5px;font-family:'Fira Code',monospace;font-size:12px;color:var(--amber)}
+.warning-alert a{color:var(--blue);text-decoration:none;font-weight:700}
+.smtp-status-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg2);border:2px solid var(--border);border-radius:10px;margin-top:12px}
+.smtp-label{font-size:13px;font-weight:700;color:var(--text-muted)}
+.smtp-val{font-size:13px;font-weight:800}
+.smtp-val.ok{color:var(--green)}.smtp-val.err{color:var(--red)}
+.trigger-item{display:flex;align-items:flex-start;gap:14px;padding:16px 0;border-bottom:1px solid var(--border)}
+.trigger-item:last-child{border-bottom:none}
+.trigger-icon{width:40px;height:40px;border-radius:10px;background:var(--blue-soft);border:1.5px solid var(--blue);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.trigger-body{flex:1}
+.trigger-name{font-size:14px;font-weight:800;color:var(--text-primary)}
+.trigger-desc{font-size:13px;font-weight:600;color:var(--text-muted);margin-top:3px;line-height:1.5}
+.trigger-badge{font-size:11px;font-weight:800;color:var(--green);background:var(--green-soft);border:1.5px solid var(--green);padding:4px 10px;border-radius:99px;font-family:'Fira Code',monospace;flex-shrink:0}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);z-index:9999;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:2px solid var(--border2);border-radius:20px;padding:32px;width:500px;max-width:95vw;box-shadow:var(--shadow-lg);animation:slideIn .2s ease}
+.modal-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:26px}
+.modal-icon-box{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.modal-icon-box.confirm{background:var(--green-soft);border:2px solid var(--green)}
+.modal-icon-box.dismiss{background:var(--red-soft);border:2px solid var(--red)}
+.modal-title{font-size:20px;font-weight:900;color:var(--text-primary)}
+.modal-sub{font-size:14px;font-weight:600;color:var(--text-muted);margin-top:4px;line-height:1.5}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:26px}
+#toast-container{position:fixed;bottom:24px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.toast{background:var(--card);border:2px solid var(--border2);border-radius:14px;padding:16px 20px;min-width:300px;max-width:420px;box-shadow:var(--shadow-lg);display:flex;align-items:flex-start;gap:14px;transform:translateX(calc(100% + 32px));opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);pointer-events:all}
+.toast.show{transform:translateX(0);opacity:1}.toast.hide{transform:translateX(calc(100% + 32px));opacity:0}
+.toast.success{border-color:var(--green)}.toast.error{border-color:var(--red)}
+.toast.info{border-color:var(--blue)}.toast.warning{border-color:var(--amber)}
+.toast-icon-box{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.toast.success .toast-icon-box{background:var(--green-soft)}.toast.error .toast-icon-box{background:var(--red-soft)}
+.toast.info .toast-icon-box{background:var(--blue-soft)}.toast.warning .toast-icon-box{background:var(--amber-soft)}
+.toast-body{flex:1}
+.toast-title{font-size:14px;font-weight:800;margin-bottom:2px}
+.toast.success .toast-title{color:var(--green)}.toast.error .toast-title{color:var(--red)}
+.toast.info .toast-title{color:var(--blue)}.toast.warning .toast-title{color:var(--amber)}
+.toast-msg{font-size:13px;font-weight:600;color:var(--text-secondary);line-height:1.5}
+.empty-state{text-align:center;padding:48px 24px}
+.empty-icon{font-size:44px;margin-bottom:14px;opacity:.65}
+.empty-label{font-size:16px;font-weight:800;color:var(--text-muted)}
+.empty-sub{font-size:13px;font-weight:600;color:var(--text-faint);margin-top:5px}
+.shimmer{background:linear-gradient(90deg,var(--card) 25%,var(--card-hover) 50%,var(--card) 75%);background-size:200% 100%;animation:shimmer-anim 1.5s infinite;border-radius:8px;height:16px;margin-bottom:10px}
+@keyframes shimmer-anim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-row">
+      <div class="brand-icon">🛡️</div>
+      <div>
+        <div class="brand-text-name">AML Agent</div>
+        <div class="brand-text-sub">gdg-488108</div>
+      </div>
+    </div>
+    <span class="brand-badge">✦ Version 3.2</span>
+  </div>
+  <nav class="nav">
+    <div class="nav-group-label">Monitor</div>
+    <div class="nav-item active" onclick="show('dashboard')"><span class="nav-icon">📊</span><span class="nav-label">Dashboard</span></div>
+    <div class="nav-item" onclick="show('violations')"><span class="nav-icon">🚨</span><span class="nav-label">Violations</span><span class="nav-count" id="pending-badge">0</span></div>
+    <div class="nav-group-label">Actions</div>
+    <div class="nav-item" onclick="show('scan')"><span class="nav-icon">🔍</span><span class="nav-label">Scan & Upload</span></div>
+    <div class="nav-item" onclick="show('chat')"><span class="nav-icon">🤖</span><span class="nav-label">AI Assistant</span></div>
+    <div class="nav-group-label">Records</div>
+    <div class="nav-item" onclick="show('audit')"><span class="nav-icon">📋</span><span class="nav-label">Audit Log</span></div>
+    <div class="nav-item" onclick="show('settings')"><span class="nav-icon">✉️</span><span class="nav-label">Email Settings</span></div>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="theme-toggle-btn" onclick="toggleTheme()">
+      <div class="theme-toggle-track"><div class="theme-toggle-thumb"></div></div>
+      <span class="theme-toggle-label" id="theme-label">Dark Mode</span>
+      <span class="theme-toggle-mode" id="theme-mode">🌙</span>
+    </button>
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      <span class="status-text">System Online</span>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-breadcrumb">AML /</span>
+    <span class="topbar-sep">&rsaquo;</span>
+    <span class="topbar-title" id="topbar-title">Dashboard</span>
+    <div class="topbar-right">
+      <div class="clock-box" id="clock">00:00:00</div>
+      <button class="btn btn-ghost btn-sm" onclick="refreshData()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="tab-pane active" id="tab-dashboard">
+      <div class="stats">
+        <div class="stat total"><div class="stat-top"><span class="stat-label">Total Violations</span><span class="stat-emoji">📊</span></div><div class="stat-val" id="s-total">—</div><div class="stat-desc">All detected</div></div>
+        <div class="stat high"><div class="stat-top"><span class="stat-label">High Risk</span><span class="stat-emoji">🔴</span></div><div class="stat-val" id="s-high">—</div><div class="stat-desc">Critical priority</div></div>
+        <div class="stat med"><div class="stat-top"><span class="stat-label">Medium Risk</span><span class="stat-emoji">🟡</span></div><div class="stat-val" id="s-med">—</div><div class="stat-desc">Needs attention</div></div>
+        <div class="stat low"><div class="stat-top"><span class="stat-label">Low Risk</span><span class="stat-emoji">🟢</span></div><div class="stat-val" id="s-low">—</div><div class="stat-desc">Informational</div></div>
+      </div>
+      <div class="dash-grid">
+        <div class="card">
+          <div class="card-header"><div class="card-title">🚨 Needs Review</div><span class="badge badge-PENDING" id="dash-pending">0 pending</span></div>
+          <div id="dash-queue" style="max-height:320px;overflow-y:auto"><div class="queue-empty"><div class="queue-empty-icon">⏳</div><div class="queue-empty-text">Loading…</div></div></div>
+        </div>
+        <div class="dash-right">
+          <div class="card">
+            <div class="card-header"><div class="card-title">📈 Review Status</div></div>
+            <div class="card-body" id="status-breakdown"><div class="shimmer"></div><div class="shimmer" style="width:80%"></div><div class="shimmer" style="width:65%"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">⚡ Quick Actions</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+              <button class="btn btn-primary w-full justify-center" onclick="show('scan')">🔍 &nbsp;Run New Scan + Upload PDF</button>
+              <button class="btn btn-ghost w-full justify-center" onclick="show('violations')">🚨 &nbsp;Review All Violations</button>
+              <button class="btn btn-ghost w-full justify-center" onclick="show('audit')">📋 &nbsp;View Audit Log</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIOLATIONS -->
+    <div class="tab-pane" id="tab-violations">
+      <div class="section-hdr"><span class="section-title">All Violations</span><span class="section-meta" id="viol-count">Loading…</span></div>
+      <div class="filters">
+        <button class="filter-btn active" onclick="filterViolations('ALL',this)">All</button>
+        <button class="filter-btn" onclick="filterViolations('HIGH',this)">🔴 High</button>
+        <button class="filter-btn" onclick="filterViolations('MEDIUM',this)">🟡 Medium</button>
+        <button class="filter-btn" onclick="filterViolations('LOW',this)">🟢 Low</button>
+        <button class="filter-btn" onclick="filterViolations('PENDING_REVIEW',this)">⏳ Pending</button>
+        <button class="filter-btn" onclick="filterViolations('CONFIRMED',this)">✅ Confirmed</button>
+        <button class="filter-btn" onclick="filterViolations('DISMISSED',this)">❌ Dismissed</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Violation ID</th><th>Risk Level</th><th>What Happened</th><th>What To Do</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="violations-tbody"><tr><td colspan="6"><div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-label">Loading violations…</div></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SCAN -->
+    <div class="tab-pane" id="tab-scan">
+      <div class="page-header">
+        <h1>🔍 Scan & Upload</h1>
+        <p>Upload a compliance policy PDF (optional) and run a transaction scan. Results are saved and an email report is sent automatically.</p>
+      </div>
+      <div class="scan-grid">
+        <div class="scan-card">
+          <div class="scan-card-title">📄 Policy Document <span style="font-weight:600;opacity:.6">(Optional)</span></div>
+          <div class="drop-zone" id="drop-zone" onclick="document.getElementById('pdf-file').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event)">
+            <div class="dz-icon-box">📄</div>
+            <div class="dz-title">Drop your PDF here</div>
+            <div class="dz-sub">or click to browse your files</div>
+          </div>
+          <div id="pdf-name"></div>
+          <input type="file" id="pdf-file" accept=".pdf" style="display:none" onchange="handleFile(this.files[0])"/>
+          <div class="info-steps">
+            <div class="info-steps-title">🔄 What Happens</div>
+            <div class="info-step"><span class="info-step-num">1</span>PDF rules extracted by Gemini AI</div>
+            <div class="info-step"><span class="info-step-num">2</span>Transactions over $10,000 checked</div>
+            <div class="info-step"><span class="info-step-num">3</span>Each transaction analyzed for violations</div>
+            <div class="info-step"><span class="info-step-num">4</span>Results saved by risk level</div>
+            <div class="info-step"><span class="info-step-num">5</span>Full email report sent automatically</div>
+          </div>
+        </div>
+        <div class="scan-card">
+          <div class="scan-card-title">✉️ Notification & Settings</div>
+          <div class="field">
+            <label class="field-label">📬 Email — Send Report To</label>
+            <input type="email" class="input" id="scan-email" placeholder="your-email@gmail.com" value="your-email@gmail.com"/>
+            <div class="field-hint">A full report is emailed here when the scan finishes</div>
+          </div>
+          <div class="email-notify-row">
+            <span class="email-notify-icon">📧</span>
+            <div class="email-notify-body">
+              <div class="email-notify-title">Email Notifications ON</div>
+              <div class="email-notify-sub">Violations summary sent after each scan</div>
+            </div>
+            <span class="email-notify-badge">ACTIVE</span>
+          </div>
+          <button class="btn btn-success w-full justify-center mt-16" id="scan-btn" style="padding:15px;font-size:16px" onclick="runScan()">
+            🔍 &nbsp;Start Compliance Scan
+          </button>
+          <div style="margin-top:10px;text-align:center;font-size:13px;color:var(--text-muted);font-weight:600">⏱ Usually takes 30–90 seconds</div>
+        </div>
+      </div>
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="progress-top"><span class="progress-heading">🔄 Scan in Progress…</span><span class="progress-pct" id="progress-pct">0%</span></div>
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="progress-steps">
+          <div class="pstep" id="step-0"><div class="pstep-dot"></div>Connecting to Google Cloud</div>
+          <div class="pstep" id="step-1"><div class="pstep-dot"></div>Reading PDF rules with AI</div>
+          <div class="pstep" id="step-2"><div class="pstep-dot"></div>Loading transactions from database</div>
+          <div class="pstep" id="step-3"><div class="pstep-dot"></div>Checking each transaction for violations</div>
+          <div class="pstep" id="step-4"><div class="pstep-dot"></div>Saving results</div>
+          <div class="pstep" id="step-5"><div class="pstep-dot"></div>Sending email report</div>
+        </div>
+      </div>
+      <div class="result-panel" id="result-panel">
+        <div class="result-header">
+          <div class="result-icon-box">✅</div>
+          <div><div class="result-title">Scan Complete!</div><div class="result-sub">All violations saved • Email report delivered</div></div>
+        </div>
+        <div class="email-banner">
+          <div class="email-banner-icon">📧</div>
+          <div><div class="email-banner-title">Email Report Sent Successfully</div><div class="email-banner-sub" id="email-sent-to">Report delivered to your-email@gmail.com</div></div>
+        </div>
+        <div class="result-stats-grid">
+          <div class="result-stat-card"><div class="result-stat-val" id="r-rules">0</div><div class="result-stat-lbl">Rules Found</div></div>
+          <div class="result-stat-card"><div class="result-stat-val" id="r-saved">0</div><div class="result-stat-lbl">Violations</div></div>
+          <div class="result-stat-card"><div class="result-stat-val red" id="r-high">0</div><div class="result-stat-lbl">High Risk</div></div>
+          <div class="result-stat-card"><div class="result-stat-val green">✓</div><div class="result-stat-lbl">Email Sent</div></div>
+        </div>
+        <div id="rules-preview" class="rules-preview-box"></div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button class="btn btn-primary" onclick="show('violations')">View Violations →</button>
+          <button class="btn btn-ghost" onclick="resetScan()">↺ Run Another Scan</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="tab-pane" id="tab-chat">
+      <div class="page-header" style="margin-bottom:16px">
+        <h1>🤖 AI Assistant</h1>
+        <p>Ask anything about AML compliance, suspicious transactions, SAR filing, or FinCEN rules — powered by Gemini AI.</p>
+      </div>
+      <div class="chat-wrap">
+        <div class="chat-messages" id="chat-msgs">
+          <div class="msg ai">
+            <div class="msg-sender">AML Agent · Gemini AI</div>
+            Hello! I'm your AML compliance assistant. I can help you understand suspicious transactions, SAR filing requirements, FinCEN guidelines, and more. Ask me anything!
+          </div>
+        </div>
+        <div class="chat-footer">
+          <input id="chat-input" placeholder="e.g. What is a SAR filing? When do I need to report?" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"/>
+          <button class="btn btn-primary" onclick="sendChat()">Send ↑</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT -->
+    <div class="tab-pane" id="tab-audit">
+      <div class="section-hdr">
+        <span class="section-title">📋 Audit Log</span>
+        <button class="btn btn-ghost btn-sm" onclick="loadAudit()">↻ Refresh</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Review ID</th><th>Violation</th><th>Decision</th><th>Officer</th><th>Date & Time</th></tr></thead>
+          <tbody id="audit-tbody"><tr><td colspan="5"><div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-label">Loading…</div></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="tab-pane" id="tab-settings">
+      <div class="page-header">
+        <h1>✉️ Email Settings</h1>
+        <p>Configure email notifications and test your setup.</p>
+      </div>
+      <div class="settings-grid">
+        <div class="settings-card">
+          <div class="settings-card-head">
+            <div class="settings-icon" style="background:var(--blue-soft);border:1.5px solid var(--blue)">⚙️</div>
+            <div><div class="settings-card-title">SMTP Setup</div><div class="settings-card-sub">Configure your email credentials</div></div>
+          </div>
+          <div class="settings-card-body">
+            <div class="warning-alert">
+              <div class="warning-alert-title">⚠️ One-Time Setup Required</div>
+              <p>Open <code>app.py</code> and fill in:<br><br>
+              <code>EMAIL_SENDER</code> — your Gmail<br>
+              <code>EMAIL_PASSWORD</code> — App Password (no spaces)<br>
+              <code>EMAIL_RECIPIENT</code> — report recipient<br><br>
+              <a href="https://myaccount.google.com/apppasswords" target="_blank">Generate App Password here →</a></p>
+            </div>
+            <div class="field">
+              <label class="field-label">📬 Send Test Email To</label>
+              <input type="email" class="input" id="test-email-addr" placeholder="your-email@gmail.com" value="your-email@gmail.com"/>
+            </div>
+            <button class="btn btn-primary" onclick="testEmail()">📤 &nbsp;Send Test Email Now</button>
+            <div class="smtp-status-row"><span class="smtp-label">SMTP Connection</span><span class="smtp-val ok">● Connected</span></div>
+            <div class="smtp-status-row" style="margin-top:8px"><span class="smtp-label">Last Email Sent</span><span class="smtp-val ok" id="last-email-time">—</span></div>
+          </div>
+        </div>
+        <div class="settings-card">
+          <div class="settings-card-head">
+            <div class="settings-icon" style="background:var(--green-soft);border:1.5px solid var(--green)">🔔</div>
+            <div><div class="settings-card-title">When Emails Are Sent</div><div class="settings-card-sub">Automatic notification triggers</div></div>
+          </div>
+          <div class="settings-card-body">
+            <div class="trigger-item">
+              <div class="trigger-icon">🔍</div>
+              <div class="trigger-body"><div class="trigger-name">Scan Finished</div><div class="trigger-desc">Full violations summary emailed after every scan</div></div>
+              <span class="trigger-badge">ON</span>
+            </div>
+            <div class="trigger-item">
+              <div class="trigger-icon">⚖️</div>
+              <div class="trigger-body"><div class="trigger-name">Officer Decision</div><div class="trigger-desc">Email sent when a violation is confirmed or dismissed</div></div>
+              <span class="trigger-badge">ON</span>
+            </div>
+            <div class="trigger-item">
+              <div class="trigger-icon">🧪</div>
+              <div class="trigger-body"><div class="trigger-name">Manual Test</div><div class="trigger-desc">Send a test email any time from this page</div></div>
+              <span class="trigger-badge">ON</span>
+            </div>
+            <div style="margin-top:20px;background:var(--bg2);border:2px solid var(--border);border-radius:12px;padding:16px">
+              <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:12px">📧 Sample Email Preview</div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-secondary);line-height:2;font-family:'Fira Code',monospace">
+                <span style="color:var(--text-muted)">Subject:</span> AML Scan Report — 5 violations<br>
+                <span style="color:var(--text-muted)">From:   </span> AML Agent (your-email@gmail.com)<br>
+                <span style="color:var(--text-muted)">Body:   </span> Violations: 5 · High: 2<br>
+                <span style="color:var(--text-muted)">Link:   </span> Open Dashboard → (your server IP)
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-icon-box" id="modal-icon-box">⚖️</div>
+      <div><div class="modal-title" id="modal-title">Review Violation</div><div class="modal-sub" id="modal-sub">Submit your decision for this flagged violation</div></div>
+    </div>
+    <input type="hidden" id="modal-vid"/>
+    <input type="hidden" id="modal-decision"/>
+    <div class="field">
+      <label class="field-label">👤 Your Email (Officer)</label>
+      <input type="email" class="input" id="modal-officer" value="your-email@gmail.com"/>
+      <div class="field-hint">📧 A decision notification will be sent to this address</div>
+    </div>
+    <div class="field">
+      <label class="field-label">📝 Notes (Optional)</label>
+      <textarea class="input input-mono" id="modal-notes" rows="3" placeholder="Add your reasoning, context, or escalation notes here…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitReview()">Submit Decision</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+let allViolations=[], currentFilter='ALL', selectedPdf=null;
+
+// THEME
+function toggleTheme(){
+  const html=document.documentElement, isDark=html.getAttribute('data-theme')==='dark';
+  html.setAttribute('data-theme',isDark?'light':'dark');
+  document.getElementById('theme-label').textContent=isDark?'Light Mode':'Dark Mode';
+  document.getElementById('theme-mode').textContent=isDark?'☀️':'🌙';
+  localStorage.setItem('aml-theme',isDark?'light':'dark');
+}
+(function(){
+  const s=localStorage.getItem('aml-theme');
+  if(s&&s!=='dark'){
+    document.documentElement.setAttribute('data-theme','light');
+    document.getElementById('theme-label').textContent='Light Mode';
+    document.getElementById('theme-mode').textContent='☀️';
+  }
+})();
+
+// CLOCK
+function updateClock(){
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    n.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' · '+
+    n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(updateClock,1000);updateClock();
+
+// NAV
+const TITLES={dashboard:'Dashboard',violations:'Violations',scan:'Scan & Upload',chat:'AI Assistant',audit:'Audit Log',settings:'Email Settings'};
+function show(tab){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.querySelector('.nav-label')?.textContent.trim()===TITLES[tab]) n.classList.add('active');
+  });
+  document.getElementById('topbar-title').textContent=TITLES[tab]||tab;
+  if(tab==='violations') loadViolations();
+  if(tab==='audit')      loadAudit();
+  if(tab==='dashboard')  loadDashboard();
+}
+function refreshData(){
+  const id=document.querySelector('.tab-pane.active')?.id.replace('tab-','');
+  if(id==='dashboard') loadDashboard();
+  if(id==='violations') loadViolations();
+  if(id==='audit') loadAudit();
+  toast('Data refreshed','info');
+}
+
+// TOAST
+const TI={success:'✅',error:'❌',info:'ℹ️',warning:'⚠️'};
+const TL={success:'Success',error:'Error',info:'Info',warning:'Warning'};
+function toast(msg,type='info',title=null){
+  const c=document.getElementById('toast-container');
+  const el=document.createElement('div');
+  el.className='toast '+type;
+  el.innerHTML=`<div class="toast-icon-box">${TI[type]}</div><div class="toast-body"><div class="toast-title">${title||TL[type]}</div><div class="toast-msg">${msg}</div></div>`;
+  c.appendChild(el);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('show')));
+  setTimeout(()=>{el.classList.replace('show','hide');setTimeout(()=>el.remove(),400);},4500);
+}
+
+// DASHBOARD
+async function loadDashboard(){
+  const [s,v]=await Promise.all([
+    fetch('/api/summary').then(r=>r.json()).catch(()=>({})),
+    fetch('/api/violations').then(r=>r.json()).catch(()=>({violations:[]}))
+  ]);
+  document.getElementById('s-total').textContent=s.total??'—';
+  document.getElementById('s-high').textContent=s.high??'—';
+  document.getElementById('s-med').textContent=s.medium??'—';
+  document.getElementById('s-low').textContent=s.low??'—';
+  const pend=s.pending||0,conf=s.confirmed||0,dism=s.dismissed||0;
+  const tot=Math.max(s.total||1,1);
+  document.getElementById('dash-pending').textContent=pend+' pending';
+  const b=document.getElementById('pending-badge');
+  b.textContent=pend; b.style.display=pend>0?'inline-flex':'none';
+  document.getElementById('status-breakdown').innerHTML=[
+    {l:'Pending Review',v:pend, c:'var(--blue)', d:'#4f8ef7'},
+    {l:'Confirmed',     v:conf, c:'var(--green)',d:'#34d399'},
+    {l:'Dismissed',     v:dism, c:'var(--red)',  d:'#fb7185'},
+  ].map(r=>`<div class="breakdown-row">
+    <div class="breakdown-dot" style="background:${r.d}"></div>
+    <span class="breakdown-lbl">${r.l}</span>
+    <div class="breakdown-bar-track"><div class="breakdown-bar-fill" style="width:${Math.round((r.v/tot)*100)}%;background:${r.d}"></div></div>
+    <span class="breakdown-num" style="color:${r.c}">${r.v}</span>
+  </div>`).join('');
+  const q=document.getElementById('dash-queue');
+  const items=(v.violations||[]).filter(x=>x.status==='PENDING_REVIEW').slice(0,6);
+  q.innerHTML=!items.length
+    ?`<div class="queue-empty"><div class="queue-empty-icon">✅</div><div class="queue-empty-text">All caught up!</div><div class="queue-empty-sub">No violations waiting for review</div></div>`
+    :items.map(x=>`<div class="queue-item"><div class="queue-item-body"><div class="queue-item-id">${(x.violation_id||'').substring(0,16)}…</div><div class="queue-item-desc">${x.explanation||''}</div></div><span class="badge badge-${x.severity}">${x.severity}</span></div>`).join('');
+}
+
+// VIOLATIONS
+async function loadViolations(){
+  document.getElementById('violations-tbody').innerHTML='<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-label">Loading violations…</div></div></td></tr>';
+  const res=await fetch('/api/violations').then(r=>r.json()).catch(()=>({violations:[]}));
+  allViolations=res.violations||[];
+  document.getElementById('viol-count').textContent=allViolations.length+' total';
+  renderViolations();
+}
+function renderViolations(){
+  const list=currentFilter==='ALL'?allViolations:allViolations.filter(v=>v.severity===currentFilter||v.status===currentFilter);
+  const tbody=document.getElementById('violations-tbody');
+  if(!list.length){tbody.innerHTML=`<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-label">No violations match this filter</div></div></td></tr>`;return;}
+  tbody.innerHTML=list.map(v=>`<tr>
+    <td class="td-id">${(v.violation_id||'').substring(0,12)}…</td>
+    <td><span class="badge badge-${v.severity}">${v.severity}</span></td>
+    <td class="td-desc">${v.explanation||''}</td>
+    <td class="td-rem">${v.remediation||''}</td>
+    <td><span class="badge badge-${v.status}">${(v.status||'').replace('_',' ')}</span></td>
+    <td>${v.status==='PENDING_REVIEW'
+      ?`<div style="display:flex;gap:6px"><button class="btn btn-confirm" onclick="openModal('${v.violation_id}','CONFIRMED')">✅ Confirm</button><button class="btn btn-dismiss" onclick="openModal('${v.violation_id}','DISMISSED')">❌ Dismiss</button></div>`
+      :`<span style="color:var(--text-muted);font-size:13px;font-weight:700">✓ Reviewed</span>`}
+    </td></tr>`).join('');
+}
+function filterViolations(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderViolations();
+}
+
+// MODAL
+function openModal(vid,decision){
+  document.getElementById('modal-vid').value=vid;
+  document.getElementById('modal-decision').value=decision;
+  const ok=decision==='CONFIRMED';
+  document.getElementById('modal-icon-box').textContent=ok?'✅':'❌';
+  document.getElementById('modal-icon-box').className='modal-icon-box '+(ok?'confirm':'dismiss');
+  document.getElementById('modal-title').textContent=ok?'Confirm This Violation':'Dismiss This Violation';
+  document.getElementById('modal-sub').textContent=ok?'Mark as confirmed and escalate for action':'Mark as a false positive or already resolved';
+  document.getElementById('modal-notes').value='';
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+async function submitReview(){
+  const vid=document.getElementById('modal-vid').value;
+  const decision=document.getElementById('modal-decision').value;
+  const officer=document.getElementById('modal-officer').value;
+  const notes=document.getElementById('modal-notes').value;
+  closeModal();
+  toast('Saving your decision…','info');
+  const res=await fetch('/api/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({violation_id:vid,decision,officer_id:officer,notes})}).then(r=>r.json()).catch(()=>({success:false}));
+  if(res.success){
+    toast(`Decision saved: ${decision}`,'success','✅ Review Submitted');
+    setTimeout(()=>toast(`Email sent to ${officer}`,'info','📧 Notification Sent'),700);
+    document.getElementById('last-email-time').textContent=new Date().toLocaleTimeString();
+    loadViolations();loadDashboard();
+  } else {
+    toast('Could not save decision. Please try again.','error');
+  }
+}
+
+// SCAN
+function handleFile(file){
+  if(!file) return;
+  selectedPdf=file;
+  document.getElementById('pdf-name').innerHTML=`📎 <strong>${file.name}</strong> <span style="opacity:.6">(${Math.round(file.size/1024)} KB)</span>`;
+  document.getElementById('drop-zone').style.borderColor='var(--blue)';
+  toast(`File ready: ${file.name}`,'success','📄 PDF Loaded');
+}
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('dragover');
+  const f=e.dataTransfer.files[0];
+  if(f?.type==='application/pdf') handleFile(f);
+  else toast('Please drop a PDF file','error');
+}
+const STEPS=[{pct:10},{pct:28},{pct:50},{pct:72},{pct:88},{pct:97}];
+function setStep(i,state){const el=document.getElementById('step-'+i);if(!el)return;el.classList.remove('active','done');if(state)el.classList.add(state);}
+async function runScan(){
+  const btn=document.getElementById('scan-btn');
+  const pw=document.getElementById('progress-wrap');
+  const pf=document.getElementById('progress-fill');
+  const ppct=document.getElementById('progress-pct');
+  const rp=document.getElementById('result-panel');
+  const email=document.getElementById('scan-email').value;
+  btn.disabled=true;btn.textContent='⏳  Scanning…';
+  pw.style.display='block';rp.classList.remove('show');
+  pf.style.width='0%';ppct.textContent='0%';
+  for(let i=0;i<6;i++) setStep(i,'');
+  let si=0;
+  const iv=setInterval(()=>{
+    if(si>=STEPS.length){clearInterval(iv);return;}
+    if(si>0) setStep(si-1,'done');
+    setStep(si,'active');
+    pf.style.width=STEPS[si].pct+'%';
+    ppct.textContent=STEPS[si].pct+'%';
+    si++;
+  },1400);
+  try{
+    let body,hdr={};
+    if(selectedPdf){
+      const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=()=>rej(new Error('Read failed'));r.readAsDataURL(selectedPdf);});
+      body=JSON.stringify({email,pdf_base64:b64,pdf_filename:selectedPdf.name});
+      hdr={'Content-Type':'application/json'};
+    } else {
+      body=JSON.stringify({email});hdr={'Content-Type':'application/json'};
+    }
+    const res=await fetch('/api/scan',{method:'POST',headers:hdr,body}).then(r=>r.json());
+    clearInterval(iv);
+    for(let i=0;i<6;i++) setStep(i,'done');
+    pf.style.width='100%';ppct.textContent='100%';
+    document.getElementById('r-rules').textContent=res.rules_count||0;
+    document.getElementById('r-saved').textContent=res.saved||0;
+    document.getElementById('r-high').textContent=res.high_count||0;
+    document.getElementById('email-sent-to').textContent=`Report delivered to ${email}`;
+    const rb=document.getElementById('rules-preview');
+    if(res.rules_preview){rb.textContent=res.rules_preview;rb.style.display='block';}
+    document.getElementById('last-email-time').textContent=new Date().toLocaleTimeString();
+    setTimeout(()=>rp.classList.add('show'),500);
+    toast(`Scan done! ${res.saved} violations found.`,'success','✅ Scan Complete');
+    setTimeout(()=>toast(`Email sent to ${email}`,'info','📧 Email Delivered'),900);
+  } catch(e){
+    clearInterval(iv);
+    toast('Scan failed: '+e.message,'error');
+  }
+  btn.disabled=false;
+  btn.innerHTML='🔍 &nbsp;Start Compliance Scan';
+}
+function resetScan(){
+  selectedPdf=null;
+  document.getElementById('pdf-name').innerHTML='';
+  document.getElementById('drop-zone').style.borderColor='';
+  document.getElementById('result-panel').classList.remove('show');
+  document.getElementById('progress-wrap').style.display='none';
+  document.getElementById('progress-fill').style.width='0%';
+  document.getElementById('progress-pct').textContent='0%';
+  document.getElementById('rules-preview').style.display='none';
+  for(let i=0;i<6;i++) setStep(i,'');
+}
+
+// CHAT — with animated typing indicator
+async function sendChat(){
+  const input=document.getElementById('chat-input');
+  const q=input.value.trim();
+  if(!q) return;
+  input.value='';input.disabled=true;
+  const msgs=document.getElementById('chat-msgs');
+  const tid='typing-'+Date.now();
+  msgs.innerHTML+=`
+    <div class="msg user"><div class="msg-sender">You</div>${q}</div>
+    <div class="msg ai" id="${tid}">
+      <div class="msg-sender">AML Agent · Gemini AI</div>
+      <div class="typing-dots"><span></span><span></span><span></span></div>
+    </div>`;
+  msgs.scrollTop=msgs.scrollHeight;
+  const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})}).then(r=>r.json()).catch(()=>({answer:'Connection error — please try again.'}));
+  const el=document.getElementById(tid);
+  if(el) el.innerHTML=`<div class="msg-sender">AML Agent · Gemini AI</div>${res.answer}`;
+  msgs.scrollTop=msgs.scrollHeight;
+  input.disabled=false;input.focus();
+}
+
+// AUDIT
+async function loadAudit(){
+  const tbody=document.getElementById('audit-tbody');
+  tbody.innerHTML='<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-label">Loading…</div></div></td></tr>';
+  const res=await fetch('/api/audit').then(r=>r.json()).catch(()=>({reviews:[]}));
+  const reviews=res.reviews||[];
+  if(!reviews.length){tbody.innerHTML=`<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-label">No audit records yet</div><div class="empty-sub">Review decisions will appear here</div></div></td></tr>`;return;}
+  tbody.innerHTML=reviews.map(r=>`<tr>
+    <td class="td-id">${(r.review_id||'').substring(0,12)}…</td>
+    <td class="td-id">${(r.violation_id||'').substring(0,12)}…</td>
+    <td><span class="badge badge-${r.officer_decision}">${r.officer_decision||''}</span></td>
+    <td style="font-size:14px;font-weight:600;color:var(--text-secondary)">${r.officer_id||''}</td>
+    <td style="font-size:12px;font-family:'Fira Code',monospace;color:var(--text-muted)">${r.reviewed_at||''}</td>
+  </tr>`).join('');
+}
+
+// EMAIL TEST
+async function testEmail(){
+  const email=document.getElementById('test-email-addr').value;
+  if(!email){toast('Please enter a recipient email address','warning');return;}
+  toast(`Sending test email to ${email}…`,'info');
+  const res=await fetch('/api/test-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})}).then(r=>r.json()).catch(()=>({success:false}));
+  if(res.success){
+    toast(`Test email delivered to ${email}`,'success','📧 Email Sent!');
+    document.getElementById('last-email-time').textContent=new Date().toLocaleTimeString();
+  } else {
+    toast('Email failed — check your SMTP settings in app.py','error','❌ Send Failed');
+  }
+}
+
+// INIT
+loadDashboard();
+</script>
+</body>
+</html>

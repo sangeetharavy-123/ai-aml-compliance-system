@@ -1,0 +1,25 @@
+# Python caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logs and temp files
+*.log
+app_logs.txt
+
+# One-time setup / test scripts
+bigquery_setup.py
+aml_setup.py
+test_bq.py
+verify_member2.py
+working_test.py
+integrated_python.py
+chatbot.py
+README-cloudshell.txt
+
+# Editor / IDE folders
+.vscode/
+*.swp
+y
+
